@@ -1880,6 +1880,24 @@ app.post("/pricecheck", async (req, res) => {
 
 })
 
+app.post("/validate", async (req, res) => {
+
+  const { curr, address, extraid } = req.body;
+
+  const url=`https://api.changenow.io/v2/validate/address?currency=${curr}&address=${(extraid!=""?address+"&extraId="+extraid:address)}`;
+
+    const options={
+    method:"GET",
+    headers:{
+      "Content-Type":"application/json"
+    }
+}
+    const response=await fetch(url,options);
+    const data=await response.json();
+    res.json(data)
+
+})
+
 //**************************************** Fixed Float Amount Price **************************** */
 // app.post("/pricecheck", async (req, res) => {
 
