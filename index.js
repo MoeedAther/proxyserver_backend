@@ -1866,20 +1866,85 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
 })
 
 //**************************************** Fixed Float  **************************** */
+// app.post("/pricecheck", async (req, res) => {
+
+//   console.log(req.body)
+//   const { sel, get, amount } = req.body;
+//   if (amount != "0" && amount != "0." && amount != 0 && amount != "") {
+//     const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
+//     const response = await ff.getPrice(sel, get, amount, 'from', 'float');
+//     return res.json(response)
+//   } else {
+//     return res.json({to:{amount:0, from:{min:0}}})
+//   }
+
+// })
+
+//**************************************** Fixed Float  **************************** */
 app.post("/pricecheck", async (req, res) => {
 
   console.log(req.body)
   const { sel, get, amount } = req.body;
   if (amount != "0" && amount != "0." && amount != 0 && amount != "") {
-    const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
-    const response = await ff.getPrice(sel, get, amount, 'from', 'float');
-    return res.json(response)
+    // const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
+    // const response = await ff.getPrice(sel, get, amount, 'from', 'float');
+    // return res.json(response)
+
+    const url=`https://api.changenow.io/v1/min-amount/${sel}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+    const options={
+      method:"GET",
+      header:{
+        "Content-Type":"application/json"
+      },
+    }
+    const response=await fetch(url,options);
+    const data=await response.json();
+    console.log(data)
+    const minamount =data.minAmount;
+    if(minamount<=amount){
+      const url2=`https://api.changenow.io/v1/exchange-amount/${amount}/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+      const options2={
+        method:"GET",
+        header:{
+          "Content-Type":"application/json"         
+        }
+      }
+
+      const response2=await fetch(url2,options2);
+      const data2=await response2.json();
+
+      const url3=`https://api.changenow.io/v1/exchange-amount/1/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+      const options3={
+        method:"GET",
+        header:{
+          "Content-Type":"application/json"         
+        }
+      }
+
+      const response3=await fetch(url3,options3);
+      const data3=await response3.json();
+
+      console.log(data2)
+      return res.json({to:{amount:data2.estimatedAmount, from:{min:minamount}, onesel:data3.estimatedAmount}})
+    }else{
+      const url3=`https://api.changenow.io/v1/exchange-amount/1/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+      const options3={
+        method:"GET",
+        header:{
+          "Content-Type":"application/json"         
+        }
+      }
+
+      const response3=await fetch(url3,options3);
+      const data3=await response3.json();
+      return res.json({to:{amount:0, from:{min:minamount}, onesel:data3.estimatedAmount}})
+    }
   } else {
-    return res.json({to:{amount:0, from:{min:0}}})
+    
+    return res.json({to:{amount:0, from:{min:0}, onesel:0}})
   }
 
 })
-
 app.post("/validate", async (req, res) => {
 
   const { curr, address, extraid } = req.body;
