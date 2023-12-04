@@ -57,12 +57,17 @@ const callApi = async () => {
 
 callApi();
 
+
 //**************************************** Multiple api fetch data ************************* */
 
 app.post("/multiplefetch", async (req, res) => {
 
+  const currentDate = new Date();
+  const minutes = currentDate.getMinutes();
+const seconds = currentDate.getSeconds();
+
   const { sell, get, amount } = req.body;
-  console.log(req.body)
+  console.log(minutes,":",seconds,".......",req.body)
   const timeout = 1000;
   const responseCall = 8000;
 
@@ -300,7 +305,7 @@ app.post("/multiplefetch", async (req, res) => {
     from: sell,
     to: get,
     amount: amount,
-    float: false
+    float: true
   };
 
 
@@ -843,18 +848,66 @@ app.post("/multiplefetch", async (req, res) => {
 
       //.......................................................Api 10 Call (FixedFloat)
       setTimeout(async () => {
-        const s=sell.toUpperCase();
-        const g=get.toUpperCase();
-        const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
-        response16 = await ff.getPrice(s, g, amount, 'from', 'float');
+        // const s=sell.toUpperCase();
+        // const g=get.toUpperCase();
+        // let sc,gc;
+        // switch(s){
+        //   case "USDTERC20":
+        //     sc="USDT";
+        //     break;
+        //   case "USDTTRC20":
+        //     sc="USDTTRC";
+        //     break;
+        //   default:
+        //       sc=s;
+        //       break;
+        // }
+        // switch(g){
+        //   case "USDTERC20":
+        //     sc="USDT";
+        //     break;
+        //   case "USDTTRC20":
+        //     gc="USDTTRC";
+        //     break;
+        //   default:
+        //     gc=g;
+        //     break;
+        // }
+
+        
+        // const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
+        // response16 = await ff.getPrice(sc, gc, amount, 'from', 'float');
       }, timeout)
 
       //.......................................................Api 11 Call (FixedFloat_fixed)
       setTimeout(async () => {
-        const s=sell.toUpperCase();
-        const g=get.toUpperCase();
-        const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
-        response9 = await ff.getPrice(s, g, amount, 'from', 'fixed');
+        // const s=sell.toUpperCase();
+        // const g=get.toUpperCase();
+        // let sc,gc;
+        // switch(s){
+        //   case "USDTERC20":
+        //     sc="USDT";
+        //     break;
+        //   case "USDTTRC20":
+        //     sc="USDTTRC";
+        //     break;
+        //   default:
+        //       sc=s;
+        //       break;
+        // }
+        // switch(g){
+        //   case "USDTERC20":
+        //     sc="USDT";
+        //     break;
+        //   case "USDTTRC20":
+        //     gc="USDTTRC";
+        //     break;
+        //   default:
+        //     gc=g;
+        //     break;
+        // }
+        // const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
+        // response9 = await ff.getPrice(sc, gc, amount, 'from', 'fixed');
       }, timeout)
       
 
@@ -980,6 +1033,469 @@ app.post("/multiplefetch", async (req, res) => {
     }
   }
 });
+
+
+//**************************************** Individual Prices ******************************* */
+
+//**************************************** Changelly Float Price ************************* */
+app.post("/price/float/Changelly", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const privateKey = crypto.createPrivateKey({
+    key: privateKeyString,
+    format: "der",
+    type: "pkcs8",
+    encoding: "hex",
+  });
+
+  //Common Variables for Changelly
+  const publicKey = crypto.createPublicKey(privateKey).export({
+    type: "pkcs1",
+    format: "der",
+  });
+
+  const message1 = {
+    jsonrpc: "2.0",
+    id: "test",
+    method: "getExchangeAmount",
+    params: {
+      from: sell,
+      to: get,
+      amountFrom: amount,
+    },
+  };
+
+  const signature1 = crypto.sign(
+    "sha256",
+    Buffer.from(JSON.stringify(message1)),
+    {
+      key: privateKey,
+      type: "pkcs8",
+      format: "der",
+    }
+  );
+
+  const param1 = {
+    method: "POST",
+    url: "https://api.changelly.com/v2",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Api-Key": crypto
+        .createHash("sha256")
+        .update(publicKey)
+        .digest("base64"),
+      "X-Api-Signature": signature1.toString("base64"),
+    },
+    body: JSON.stringify(message1),
+  };
+
+
+    request(param1, async function (error, response) {
+      try {
+        const data = await JSON.parse(response.body);
+        let price = data.result[0].amountTo;
+        return res.json({price:price})
+      } catch (error) {
+        console.log()
+      }
+    })
+
+});
+
+//**************************************** Changelly Fixed Price ************************* */
+app.post("/price/fixed/Changelly", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const privateKey = crypto.createPrivateKey({
+    key: privateKeyString,
+    format: "der",
+    type: "pkcs8",
+    encoding: "hex",
+  });
+
+  //Common Variables for Changelly
+  const publicKey = crypto.createPublicKey(privateKey).export({
+    type: "pkcs1",
+    format: "der",
+  });
+
+  const message2 = {
+
+    jsonrpc: "2.0",
+    id: "test",
+    method: "getFixRateForAmount",
+    params: [
+      {
+        from: sell,
+        to: get,
+        amountFrom: amount
+      }
+    ]
+
+  }
+
+  const signature2 = crypto.sign(
+    "sha256",
+    Buffer.from(JSON.stringify(message2)),
+    {
+      key: privateKey,
+      type: "pkcs8",
+      format: "der",
+    }
+  );
+
+  const param2 = {
+    method: "POST",
+    url: "https://api.changelly.com/v2",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Api-Key": crypto
+        .createHash("sha256")
+        .update(publicKey)
+        .digest("base64"),
+      "X-Api-Signature": signature2.toString("base64"),
+    },
+    body: JSON.stringify(message2),
+  };
+
+  request(param2, async function (error, response) {
+    try {
+      const data = await JSON.parse(response.body);
+      let price = data.result[0].amountTo;
+      return res.json({price:price})
+    } catch (error) {
+      console.log(error)
+    }
+  })
+
+});
+
+//**************************************** Changenow Float Price ************************* */
+app.post("/price/float/Changenow", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response = await fetch(
+    `https://api.changenow.io/v1/exchange-amount/${amount}/${sell}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+  const data=await response.json()
+  const price=data.estimatedAmount
+  res.json({price:price})
+
+});
+
+//**************************************** Changenow Fixed Price ************************* */
+app.post("/price/fixed/Changenow", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response = await fetch(
+    `https://api.changenow.io/v1/exchange-amount/fixed-rate/${amount}/${sell}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c&useRateId=true`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+  const data=await response.json()
+  const price=data.estimatedAmount
+  res.json({price:price})
+
+});
+
+//**************************************** StealthEX Float Price ************************* */
+app.post("/price/float/Stealthex", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+  console.log("Stealthex float:",req.body)
+  const response = await fetch(`https://api.stealthex.io/api/v2/estimate/${sell}/${get}?amount=${amount}&api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=false`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  const data=await response.json()
+  console.log("Stealthex float:",data.estimated_amount)
+  const price=data.estimated_amount
+  res.json({price:price})
+
+});
+
+//**************************************** StealthEX Fixed Price ************************* */
+app.post("/price/fixed/Stealthex", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response = await fetch(`https://api.stealthex.io/api/v2/estimate/${sell}/${get}?amount=${amount}&api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  const data=await response.json()
+  const price=data.estimated_amount
+  res.json({price:price})
+
+});
+
+//**************************************** Exolix Float Price ************************* */
+app.post("/price/float/Exolix", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response = await fetch(
+    `https://exolix.com/api/v2/rate?coinFrom=${sell}&coinTo=${get}&amount=${amount}&rateType=float`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+
+  const data=await response.json()
+  const price=data.toAmount
+  res.json({price:price})
+
+});
+
+//**************************************** Exolix Fixed Price ************************* */
+app.post("/price/fixed/Exolix", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response = await fetch(
+    `https://exolix.com/api/v2/rate?coinFrom=${sell}&coinTo=${get}&amount=${amount}&rateType=fixed`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+
+  const data=await response.json()
+  const price=data.toAmount
+  res.json({price:price})
+
+});
+
+//**************************************** Simpleswap Float Price ************************* */
+app.post("/price/float/Simpleswap", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+console.log(req.body)
+  const response =  await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+
+  const data=await response.json()
+  const price=data
+  res.json({price:price})
+
+});
+
+//**************************************** Simpleswap Float Price ************************* */
+app.post("/price/fixed/Simpleswap", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const response =  await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+
+  const data=await response.json()
+  const price=data
+  res.json({price:price})
+
+});
+
+//**************************************** Changehero Float Price ************************* */
+app.post("/price/float/Changehero", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+  console.log("Changehero")
+
+  const param = {
+    jsonrpc: "2.0",
+    method: "getExchangeAmount",
+    params: {
+      from: sell,
+      to: get,
+      amount: amount,
+    },
+  };
+
+  const response =  await fetch(`https://api.changehero.io/v2/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": "46799cd819854116907d2a6f54926157",
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json()
+  const price=data.result
+  res.json({price:price})
+
+});
+
+//**************************************** Changehero Fixed Price ************************* */
+app.post("/price/fixed/Changehero", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+  console.log("Changehero")
+
+
+  const param = {
+    jsonrpc: "2.0",
+    method: "getFixRate",
+    params: {
+      from: sell,
+      to: get,
+      amount: amount,
+    },
+  };
+
+  const response =  await fetch(`https://api.changehero.io/v2/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": "46799cd819854116907d2a6f54926157",
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json()
+  const price=data.result[0].result * parseFloat(amount)
+  res.json({price:price})
+
+});
+
+//**************************************** Godex Float Price ************************* */
+app.post("/price/float/Godex", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const param = {
+    from: sell.toUpperCase(),
+    to: get.toUpperCase(),
+    amount: amount,
+  };
+
+  const response =  await fetch(`https://api.godex.io/api/v1/info`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json()
+  const price=data.amount
+  res.json({price:price})
+
+});
+
+//**************************************** Godex Fixed Price ************************* */
+app.post("/price/fixed/Godex", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const param = {
+    from: sell.toUpperCase(),
+    to: get.toUpperCase(),
+    amount: amount,
+  };
+
+  const response =  await fetch(`https://api.godex.io/api/v1/info`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json();
+  const price=data.amount
+  res.json({price:price})
+
+});
+
+//**************************************** Letsexchange Float Price ************************* */
+app.post("/price/float/Letsexchange", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const param = {
+    from: sell,
+    to: get,
+    amount: amount,
+    float: true
+  };
+
+  const response =  await fetch(`https://api.letsexchange.io/api/v1/info`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0b2tlbiIsImRhdGEiOnsiaWQiOjkwLCJoYXNoIjoiZXlKcGRpSTZJa2wzYmxFNE1VeHVOMU5DU25aamFEbExWVE5rYW1jOVBTSXNJblpoYkhWbElqb2lUV1ZhWWs5dGNXY3dWSEZMYm1wWGRuVjJjMXBzV0RaU1ZpdFphamxJYWtrM1EzQkhTRlpsVFdGS1JXZHVXV1pxUTJRNU9WUXlaSHBEVDJWd2NVeEdRVTFOYjBVelJIaEdSRzlwWjBsaEt6UjJWR0UxVjI1TmQweEROamRCUmxCWFdISTJRMGRpUm1Kb1ltTTlJaXdpYldGaklqb2labU0xTnpNMU0yRXlaRFJqWmpSalpXWTFZV1ZqWVRkalptSTBZall4WmpVNFpqZGtNak0wTXpVNU1XRmtaRGRrWm1Sak5HWXhaamt6TldFM01tVXlOaUo5In0sImlzcyI6Imh0dHBzOlwvXC9sZXRzLW5naW54LXN2Y1wvYXBpXC92MVwvYXBpLWtleSIsImlhdCI6MTY2ODUxNjUzNywiZXhwIjoxOTg5OTI0NTM3LCJuYmYiOjE2Njg1MTY1MzcsImp0aSI6IkRCelpBVjdBRDhMMzZTZ1IifQ.tP5L6xDINQSmWVJsmin2vrjrYFopk-cDNWGkBOlKARg"
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json()
+  const price=data.amount
+  res.json({price:price})
+
+});
+
+//**************************************** Letsexchange Fixed Price ************************* */
+app.post("/price/fixed/Letsexchange", async (req, res) => {
+
+  const {sell,get,amount}=req.body
+
+  const param = {
+    from: sell,
+    to: get,
+    amount: amount,
+    float: false
+  };
+
+  const response =  await fetch(`https://api.letsexchange.io/api/v1/info`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0b2tlbiIsImRhdGEiOnsiaWQiOjkwLCJoYXNoIjoiZXlKcGRpSTZJa2wzYmxFNE1VeHVOMU5DU25aamFEbExWVE5rYW1jOVBTSXNJblpoYkhWbElqb2lUV1ZhWWs5dGNXY3dWSEZMYm1wWGRuVjJjMXBzV0RaU1ZpdFphamxJYWtrM1EzQkhTRlpsVFdGS1JXZHVXV1pxUTJRNU9WUXlaSHBEVDJWd2NVeEdRVTFOYjBVelJIaEdSRzlwWjBsaEt6UjJWR0UxVjI1TmQweEROamRCUmxCWFdISTJRMGRpUm1Kb1ltTTlJaXdpYldGaklqb2labU0xTnpNMU0yRXlaRFJqWmpSalpXWTFZV1ZqWVRkalptSTBZall4WmpVNFpqZGtNak0wTXpVNU1XRmtaRGRrWm1Sak5HWXhaamt6TldFM01tVXlOaUo5In0sImlzcyI6Imh0dHBzOlwvXC9sZXRzLW5naW54LXN2Y1wvYXBpXC92MVwvYXBpLWtleSIsImlhdCI6MTY2ODUxNjUzNywiZXhwIjoxOTg5OTI0NTM3LCJuYmYiOjE2Njg1MTY1MzcsImp0aSI6IkRCelpBVjdBRDhMMzZTZ1IifQ.tP5L6xDINQSmWVJsmin2vrjrYFopk-cDNWGkBOlKARg"
+    },
+    body: JSON.stringify(param),
+  })
+
+  const data=await response.json()
+  const price=data
+  res.json({price:price})
+
+});
+
 
 
 //**************************************** Changelly Float Transaction ************************* */
@@ -1111,7 +1627,7 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
 //**************************************** Changenow Floating Transactions ************************* */
 app.post("/createTransaction/changenow/float", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, extraid ,refextraid} = req.body
   console.log("changenow")
   console.log(req.body)
 
@@ -1126,7 +1642,7 @@ app.post("/createTransaction/changenow/float", async (req, res) => {
     userId: "",
     contactEmail: email,
     refundAddress: refund_Address,
-    refundExtraId: ""
+    refundExtraId: refextraid
   }
 
   const options = {
@@ -1148,7 +1664,7 @@ app.post("/createTransaction/changenow/fixed", async (req, res) => {
 
   console.log("changenow fixed")
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid} = req.body
 
   const url = "https://api.changenow.io/v1/transactions/fixed-rate/3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c";
 
@@ -1162,7 +1678,7 @@ app.post("/createTransaction/changenow/fixed", async (req, res) => {
     userId: "",
     contactEmail: email,
     refundAddress: refund_Address,
-    refundExtraId: "",
+    refundExtraId: refextraid,
     rateId: rateId
   }
 
@@ -1185,7 +1701,7 @@ app.post("/createTransaction/StealthEX/float", async (req, res) => {
 
   console.log("StealthEX")
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid} = req.body
 
   const url = "https://api.stealthex.io/api/v2/exchange?api_key=fc69c031-976a-4e7f-b3db-e18f758bed5d";
 
@@ -1198,6 +1714,7 @@ app.post("/createTransaction/StealthEX/float", async (req, res) => {
     amount_from: amount,
     fixed: "false",
     refund_address: refund_Address,
+    refund_extra_id:refextraid,
     api_key: "6cbd846e-a085-4505-afeb-8fca0d650c58"
   }
 
@@ -1219,7 +1736,7 @@ app.post("/createTransaction/StealthEX/float", async (req, res) => {
 app.post("/createTransaction/StealthEX/fixed", async (req, res) => {
 
   console.log("StealthEX fixed")
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
 
   const url = "https://api.stealthex.io/api/v2/exchange?api_key=fc69c031-976a-4e7f-b3db-e18f758bed5d";
 
@@ -1232,6 +1749,7 @@ app.post("/createTransaction/StealthEX/fixed", async (req, res) => {
     amount_from: amount,
     fixed: "true",
     refund_address: refund_Address,
+    refund_extra_id:refextraid,
     api_key: "6cbd846e-a085-4505-afeb-8fca0d650c58",
     "rate_id": rateId
   }
@@ -1331,7 +1849,7 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 
   console.log("Simpleswap")
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
 
   const url = "https://api.simpleswap.io/create_exchange?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759";
@@ -1345,7 +1863,7 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
     address_to: recieving_Address,
     extra_id_to: extraid,
     user_refund_address: refund_Address,
-    user_refund_extra_id: ""
+    user_refund_extra_id: refextraid
 
   }
 
@@ -1369,7 +1887,7 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 //**************************************** Simpleswap Fixed Transactions ************************* */
 app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
 
   const url = "https://api.simpleswap.io/create_exchange?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759";
@@ -1381,10 +1899,10 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
     currency_to: get,
     amount: amount,
     address_to: recieving_Address,
-    extra_id_to: extraid,
+    extra_id_to: "",
+    extra_id:extraid,
     user_refund_address: refund_Address,
-    user_refund_extra_id: ""
-
+    user_refund_extra_id: refextraid
   }
 
   const options = {
@@ -1407,7 +1925,7 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
 //**************************************** Changehero Float Transactions ************************* */
 app.post("/createTransaction/Changehero/float", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
 
   const url = "https://api.changehero.io/v2/";
@@ -1422,7 +1940,8 @@ app.post("/createTransaction/Changehero/float", async (req, res) => {
       address: recieving_Address,
       extraId: extraid,
       amount: amount,
-      refundAddress: refund_Address
+      refundAddress: refund_Address,
+      refundExtraId: refextraid
     }
   }
 
@@ -1449,7 +1968,7 @@ app.post("/createTransaction/Changehero/float", async (req, res) => {
 //**************************************** Changehero Fixed Transactions ************************* */
 app.post("/createTransaction/Changehero/fixed", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
 
   console.log("Changehero Fixed")
 
@@ -1468,7 +1987,8 @@ app.post("/createTransaction/Changehero/fixed", async (req, res) => {
       address: recieving_Address,
       extraId: extraid,
       amount: amount,
-      refundAddress: refund_Address
+      refundAddress: refund_Address,
+      refundExtraId: refextraid
     }
 
   }
@@ -1493,11 +2013,10 @@ app.post("/createTransaction/Changehero/fixed", async (req, res) => {
 
 });
 
-
 //**************************************** Godex Float Transactions ************************* */
 app.post("/createTransaction/Godex/float", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
 
   const url = "https://api.godex.io/api/v1/transaction?affiliate_id=sZnGAGyVu";
@@ -1508,8 +2027,9 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
     coin_to: get.toUpperCase(),
     deposit_amount: amount,
     withdrawal: recieving_Address,
-    withdrawal_extra_id: "",
-    return: refund_Address
+    withdrawal_extra_id: extraid,
+    return: refund_Address,
+    return_extra_id: refextraid
 
   }
 
@@ -1537,7 +2057,7 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
 //**************************************** Letsexchange Float Transactions ************************* */
 app.post("/createTransaction/Letsexchange/float", async (req, res) => {
   console.log("letsexchange")
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid,  refextraid} = req.body
   console.log(req.body)
 
   const url = "https://api.letsexchange.io/api/v1/transaction";
@@ -1550,7 +2070,8 @@ app.post("/createTransaction/Letsexchange/float", async (req, res) => {
     deposit_amount: amount,
     withdrawal: recieving_Address,
     withdrawal_extra_id: extraid,
-    return: refund_Address
+    return: refund_Address,
+    return_extra_id:refextraid
 
   }
 
@@ -1579,7 +2100,7 @@ app.post("/createTransaction/Letsexchange/float", async (req, res) => {
 app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
   console.log("letsexchange_fixed")
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
 
   const url = "https://api.letsexchange.io/api/v1/transaction";
@@ -1593,6 +2114,7 @@ app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
     withdrawal: recieving_Address,
     withdrawal_extra_id: extraid,
     return: refund_Address,
+    return_extra_id:refextraid,
     rate_id: rateId
   }
 
@@ -1617,10 +2139,10 @@ app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
 
 });
 
-//**************************************** Fixed Float Foat Transatcion  **************************** */
+//**************************************** FixedFloat Foat Transatcion  **************************** */
 app.post("/createTransaction/Fixedfloat/float", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   const s=sell.toUpperCase();
   const g=get.toUpperCase();
 
@@ -1720,6 +2242,7 @@ app.post("/transactionStatus/StealthEX", async (req, res) => {
 })
 
 //**************************************** Exolix Transaction Status **************************** */
+
 app.post("/transactionStatus/Exolix", async (req, res) => {
 
   const { id } = req.body
@@ -1866,21 +2389,6 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
 })
 
 //**************************************** Fixed Float  **************************** */
-// app.post("/pricecheck", async (req, res) => {
-
-//   console.log(req.body)
-//   const { sel, get, amount } = req.body;
-//   if (amount != "0" && amount != "0." && amount != 0 && amount != "") {
-//     const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
-//     const response = await ff.getPrice(sel, get, amount, 'from', 'float');
-//     return res.json(response)
-//   } else {
-//     return res.json({to:{amount:0, from:{min:0}}})
-//   }
-
-// })
-
-//**************************************** Fixed Float  **************************** */
 app.post("/pricecheck", async (req, res) => {
 
   console.log(req.body)
@@ -1945,6 +2453,68 @@ app.post("/pricecheck", async (req, res) => {
   }
 
 })
+
+
+//**************************************** Fixed Float  **************************** */
+app.get("/currencies", async (req, res) => {
+
+ 
+    const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
+    const response = await ff.getCurrencies();
+    return res.json(response)
+
+    // const url=`https://api.changenow.io/v1/min-amount/${sel}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+    // const options={
+    //   method:"GET",
+    //   header:{
+    //     "Content-Type":"application/json"
+    //   },
+    // }
+    // const response=await fetch(url,options);
+    // const data=await response.json();
+    // console.log(data)
+    // const minamount =data.minAmount;
+    // if(minamount<=amount){
+    //   const url2=`https://api.changenow.io/v1/exchange-amount/${amount}/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+    //   const options2={
+    //     method:"GET",
+    //     header:{
+    //       "Content-Type":"application/json"         
+    //     }
+    //   }
+
+    //   const response2=await fetch(url2,options2);
+    //   const data2=await response2.json();
+
+    //   const url3=`https://api.changenow.io/v1/exchange-amount/1/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+    //   const options3={
+    //     method:"GET",
+    //     header:{
+    //       "Content-Type":"application/json"         
+    //     }
+    //   }
+
+    //   const response3=await fetch(url3,options3);
+    //   const data3=await response3.json();
+
+    //   console.log(data2)
+    //   return res.json({to:{amount:data2.estimatedAmount, from:{min:minamount}, onesel:data3.estimatedAmount}})
+    // }else{
+    //   const url3=`https://api.changenow.io/v1/exchange-amount/1/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
+    //   const options3={
+    //     method:"GET",
+    //     header:{
+    //       "Content-Type":"application/json"         
+    //     }
+    //   }
+
+    //   const response3=await fetch(url3,options3);
+    //   const data3=await response3.json();
+    //   return res.json({to:{amount:0, from:{min:minamount}, onesel:data3.estimatedAmount}})
+    // }
+
+})
+
 app.post("/validate", async (req, res) => {
 
   const { curr, address, extraid } = req.body;
@@ -1962,71 +2532,6 @@ app.post("/validate", async (req, res) => {
     res.json(data)
 
 })
-
-//**************************************** Fixed Float Amount Price **************************** */
-// app.post("/pricecheck", async (req, res) => {
-
-//   console.log(req.body)
-//   const { sel, get, amount } = req.body;
-//   if (amount != "0" && amount != "0." && amount != 0 && amount != "") { 
-//     const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
-//     const response = await ff.getPrice(sel, get, amount, 'from', 'float');
-
-//     return res.json(response)
-//   } else {
-//     // return res.json({})
-//   }
-
-// })
-
-// app.post("/minamount",async(req,res)=>{
-// console.log(req.body)
-//   const {sel,get}=req.body
-//   const url="https://api.changehero.io/v2/"; 
-
-//   const params={
-//     jsonrpc: "2.0",
-//     id: "test",
-//     method: "getMinAmount",
-//     params: {
-//       from: sel,
-//       to: get
-//     }
-//   }
-
-// const options={
-// method:"POST",
-// headers: {
-// "Content-Type": "application/json",
-// "api-key":"46799cd819854116907d2a6f54926157"
-// },
-// body:JSON.stringify(params)
-// }
-
-// const response= await fetch(url,options)
-
-
-// const data= await response.json()
-// res.json(data)
-
-// })
-
-
-
-// app.get("/validate_address", async (req,res)=>{
-//  const url="https://api.changenow.io/v2/validate/address?currency=xrp&address=rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn";
-//  const options={
-//   "Content-Type":"application/json",
-//  };
-//  const response=await fetch(url,options);
-//  const data=await response.json()
-//  console.log(data)
-//  res.json(data)
-// })
-
-
-
-
 
 app.listen(PORT, () => {
   console.log("Server started at http://localhost:" + PORT) + "5002";
