@@ -305,7 +305,7 @@ const seconds = currentDate.getSeconds();
     from: sell,
     to: get,
     amount: amount,
-    float: true
+    float: false
   };
 
 
@@ -1309,12 +1309,12 @@ console.log(req.body)
 
 });
 
-//**************************************** Simpleswap Float Price ************************* */
+//**************************************** Simpleswap Fixed Price ************************* */
 app.post("/price/fixed/Simpleswap", async (req, res) => {
 
   const {sell,get,amount}=req.body
 
-  const response =  await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
+  const response =  await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -1933,7 +1933,7 @@ app.post("/createTransaction/Changehero/float", async (req, res) => {
   const params = {
 
     jsonrpc: "2.0",
-    method: "createFixTransaction",
+    method: "createTransaction",
     params: {
       from: sell,
       to: get,
@@ -2018,7 +2018,6 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
   console.log(req.body)
-
   const url = "https://api.godex.io/api/v1/transaction?affiliate_id=sZnGAGyVu";
 
   const params = {
@@ -2027,7 +2026,7 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
     coin_to: get.toUpperCase(),
     deposit_amount: amount,
     withdrawal: recieving_Address,
-    withdrawal_extra_id: extraid,
+    withdrawal_extra_id: refextraid!=undefined?refextraid:"",
     return: refund_Address,
     return_extra_id: refextraid
 
@@ -2069,7 +2068,7 @@ app.post("/createTransaction/Letsexchange/float", async (req, res) => {
     coin_to: get.toUpperCase(),
     deposit_amount: amount,
     withdrawal: recieving_Address,
-    withdrawal_extra_id: extraid,
+    withdrawal_extra_id: extraid!=undefined?extraid:"",
     return: refund_Address,
     return_extra_id:refextraid
 
@@ -2112,7 +2111,7 @@ app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
     coin_to: get.toUpperCase(),
     deposit_amount: amount,
     withdrawal: recieving_Address,
-    withdrawal_extra_id: extraid,
+    withdrawal_extra_id: extraid!=undefined?extraid:"",
     return: refund_Address,
     return_extra_id:refextraid,
     rate_id: rateId
@@ -2365,8 +2364,6 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
   const url = `https://api.letsexchange.io/api/v1/transaction/${id}/status`;
 
   console.log(url)
-
-  const params = {}
 
   const options = {
     method: "GET",
