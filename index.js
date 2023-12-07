@@ -69,7 +69,7 @@ const seconds = currentDate.getSeconds();
   const { sell, get, amount } = req.body;
   console.log(minutes,":",seconds,".......",req.body)
   const timeout = 1000;
-  const responseCall = 8000;
+  const responseCall = 12000;
 
 
   changelly_float_price = 0
@@ -333,7 +333,10 @@ const seconds = currentDate.getSeconds();
           if (response2.ok) {
 
             var result2 = await response2.json();
-            if (amount > result2.minAmount) {
+            let amount_num=parseFloat(amount)
+            let exolix_min=parseFloat(result2.minAmount)
+            console.log(amount_num,exolix_min)
+            if (amount_num >= exolix_min) {
               // exolix = typeof result2.toAmount === 'undefined'? 0: parseFloat(result2.toAmount)
               // exolix = typeof exolix === 'number' && !isNaN(exolix)?exolix.toFixed(8):0;
               exolix = 0
@@ -367,7 +370,11 @@ const seconds = currentDate.getSeconds();
         try {
           if (response4.ok != "undefined") {
             var result4 = await response4.json();
-            if (amount > result4.min_amount) {
+
+            let amount_num=parseFloat(amount)
+            let Godex_min=parseFloat(result4.min_amount )
+
+            if (amount_num >= Godex_min) {
               godex = typeof result4.amount === 'undefined' ? 0 : parseFloat(result4.amount)
               godex = typeof godex === 'number' && !isNaN(godex) ? godex.toFixed(8) : 0;
             } else {
@@ -428,11 +435,14 @@ const seconds = currentDate.getSeconds();
 
         // Letsexchange
         try {
+
           if (response8.ok) {
             var result8 = await response8.json();
-
-            if (amount > result8.min_amount) {
+            let amount_num=parseFloat(amount);
+            let letsexchange_min=parseFloat(result8.min_amount);
+            if (amount_num >= letsexchange_min) {
               letsexchange = typeof result8 === 'undefined' ? 0 : parseFloat(result8.amount);
+              console.log(letsexchange)
               letsexchange = typeof letsexchange === 'number' && !isNaN(letsexchange) ? letsexchange.toFixed(8) : 0;
             } else {
               letsexchange = 0
@@ -515,8 +525,10 @@ const seconds = currentDate.getSeconds();
         try {
           if (response12.ok) {
             var result12 = await response12.json();
+            let amount_num=parseFloat(amount)
+            let exolix_min=parseFloat(result12.minAmount)
             //This condition checks if amount send is less then minimum amount to exchange if amount less then minimum it sets 0
-            if (amount > result12.minAmount) {
+            if (amount_num >= exolix_min) {
               //  exolix_fixed = typeof result12.toAmount === 'undefined'? 0: parseFloat(result12.toAmount);
               //  exolix_fixed = typeof exolix_fixed === 'number' && !isNaN(exolix_fixed)?exolix_fixed.toFixed(8):0;
               exolix_fixed = 0
@@ -565,7 +577,9 @@ const seconds = currentDate.getSeconds();
         try {
           if (response15.ok != "undefined") {
             var result15 = await response15.json();
-            if (amount > result15.min_amount) {
+            let amount_num=parseFloat(amount)
+            let letsexchange_min=parseFloat(result15.min_amount)
+            if (amount_num >= letsexchange_min) {
               letsexchange_fixed = typeof result15 === 'undefined' ? 0 : parseFloat(result15.amount)
               letsexchange_fixed = typeof letsexchange_fixed === 'number' && !isNaN(letsexchange_fixed) ? letsexchange_fixed.toFixed(8) : 0;
               letsexchange_fixed_rateId = result15.rate_id;
@@ -694,9 +708,10 @@ const seconds = currentDate.getSeconds();
         })
 
         const result16 = await response16.json();
+        let changehero_min=parseFloat(result16.result)
+        let amount_num=parseFloat(amount)
 
-
-        if (amount > result16.result) {
+        if (amount_num >= changehero_min) {
           response3 = await fetch(`https://api.changehero.io/v2/`, {
             method: "POST",
             headers: {
@@ -737,7 +752,9 @@ const seconds = currentDate.getSeconds();
 
         const data = await response.json()
 
-        if (amount > data.min) {
+        let amount_num=parseFloat(amount)
+        let simpleswap_num=parseFloat(data.min)
+        if (amount_num >= simpleswap_num) {
           response5 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
             method: "GET",
             headers: {
@@ -763,7 +780,10 @@ const seconds = currentDate.getSeconds();
 
         const result17 = await response17.json()
 
-        if (amount > result17.minAmount) {
+        let amount_num=parseFloat(amount)
+        let changenow_min=parseFloat(result17.minAmount)
+
+        if (amount_num >= changenow_min) {
           response6 = await fetch(
             `https://api.changenow.io/v1/exchange-amount/${amount}/${sell}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`,
             {
@@ -790,8 +810,9 @@ const seconds = currentDate.getSeconds();
         )
 
         const result18 = await response18.json()
-
-        if (amount > result18.min_amount) {
+          let  amount_num=parseFloat(amount)
+          let stealthex_min=parseFloat(result18.min_amount)
+        if (amount_num >= stealthex_min) {
           response7 = await fetch(`https://api.stealthex.io/api/v2/estimate/${sell}/${get}?amount=${amount}&api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=false`, {
             method: "GET",
             headers: {
@@ -826,7 +847,10 @@ const seconds = currentDate.getSeconds();
           }
         })
 
-        if (amount > comp2) {
+        let amount_num=parseFloat(amount)
+        let changelly_min=parseFloat(comp2)
+
+        if (amount_num > changelly_min) {
           response9 = request(param9, async function (error, response) {
             try {
               const data = await JSON.parse(response.body);
@@ -925,8 +949,9 @@ const seconds = currentDate.getSeconds();
         )
 
         const result18 = await response18.json()
-
-        if (amount > result18.minAmount) {
+        let amount_num=parseFloat(amount)
+        let changenow_min=parseFloat(result18.minAmount)
+        if (amount_num >= changenow_min) {
           response10 = await fetch(
             `https://api.changenow.io/v1/exchange-amount/fixed-rate/${amount}/${sell}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c&useRateId=true`,
             {
@@ -943,7 +968,7 @@ const seconds = currentDate.getSeconds();
       setTimeout(async () => {
 
         const response19 = await fetch(
-          `https://api.stealthex.io/api/v2/min/${sell}/${get}?api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=false`,
+          `https://api.stealthex.io/api/v2/min/${sell}/${get}?api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=true`,
           {
             method: "GET",
             headers: {
@@ -951,10 +976,10 @@ const seconds = currentDate.getSeconds();
             },
           }
         )
-
         const result19 = await response19.json()
-
-        if (amount > result19.min_amount) {
+          let amount_num=parseFloat(amount)
+        let stealthex_min=parseFloat(result19.min_amount)
+        if (amount_num >= stealthex_min) {
           response11 = await fetch(`https://api.stealthex.io/api/v2/estimate/${sell}/${get}?amount=${amount}&api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=true`, {
             method: "GET",
             headers: {
@@ -980,12 +1005,27 @@ const seconds = currentDate.getSeconds();
 
       //.......................................................Api 13 Call (Simpleswap Fixed)
       setTimeout(async () => {
+        const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        });
+
+        const data = await response.json()
+
+        let amount_num=parseFloat(amount)
+        let simpleswap_num=parseFloat(data.min)
+
+        if(amount_num>=simpleswap_num)
+{
         response13 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           }
         })
+      }
       }, timeout)
 
       //.......................................................Api 14 Call (Changehero Fixed)
@@ -1001,8 +1041,9 @@ const seconds = currentDate.getSeconds();
         })
 
         const result17 = await response17.json();
-
-        if (amount > result17.result) {
+        let changehero_min=parseFloat(result17.result)
+        let amount_num=parseFloat(amount)
+        if (amount_num >= changehero_min) {
           response14 = await fetch(`https://api.changehero.io/v2/`, {
             method: "POST",
             headers: {
@@ -2304,7 +2345,9 @@ app.post("/transactionStatus/Changehero", async (req, res) => {
 
     jsonrpc: "2.0",
     method: "getStatus",
+    params:{
     id: id
+    }
   }
 
   const options = {
@@ -2318,7 +2361,6 @@ app.post("/transactionStatus/Changehero", async (req, res) => {
   }
 
   const response = await fetch(url, options)
-  console.log(response)
   const data = await response.json()
 
   console.log(data)
@@ -2334,8 +2376,6 @@ app.post("/transactionStatus/Godex", async (req, res) => {
 
   const url = `http://api.godex.io/api/v1/transaction/${id}`;
   console.log(url)
-
-  const params = {}
 
   const options = {
     method: "GET",
@@ -2533,6 +2573,3 @@ app.post("/validate", async (req, res) => {
 app.listen(PORT, () => {
   console.log("Server started at http://localhost:" + PORT) + "5002";
 });
-
-
-
