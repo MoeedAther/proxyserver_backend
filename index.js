@@ -769,7 +769,7 @@ const seconds = currentDate.getSeconds();
       setTimeout(async () => {
 
         const response17 = await fetch(
-          `https://api.changenow.io/v2/exchange/min-amount?fromCurrency=${sell}&toCurrency=${get}`,
+          `https://api.changenow.io/v1/min-amount/${sell}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`,
           {
             method: "GET",
             headers: {
@@ -778,11 +778,12 @@ const seconds = currentDate.getSeconds();
           }
         )
 
-        const result17 = await response17.json()
 
+        const result17 = await response17.json()
+        console.log(result17)
         let amount_num=parseFloat(amount)
         let changenow_min=parseFloat(result17.minAmount)
-
+        console.log(amount_num, changenow_min)
         if (amount_num >= changenow_min) {
           response6 = await fetch(
             `https://api.changenow.io/v1/exchange-amount/${amount}/${sell}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`,
@@ -793,6 +794,8 @@ const seconds = currentDate.getSeconds();
               },
             }
           )
+          var result6 = await response6.json();
+          console.log(result6)
         }
       }, timeout)
 
