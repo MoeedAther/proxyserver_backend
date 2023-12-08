@@ -67,9 +67,8 @@ app.post("/multiplefetch", async (req, res) => {
 const seconds = currentDate.getSeconds();
 
   const { sell, get, amount } = req.body;
-  console.log(minutes,":",seconds,".......",req.body)
   const timeout = 1000;
-  const responseCall = 12000;
+  const responseCall = 5000;
 
 
   changelly_float_price = 0
@@ -335,7 +334,6 @@ const seconds = currentDate.getSeconds();
             var result2 = await response2.json();
             let amount_num=parseFloat(amount)
             let exolix_min=parseFloat(result2.minAmount)
-            console.log(amount_num,exolix_min)
             if (amount_num >= exolix_min) {
               // exolix = typeof result2.toAmount === 'undefined'? 0: parseFloat(result2.toAmount)
               // exolix = typeof exolix === 'number' && !isNaN(exolix)?exolix.toFixed(8):0;
@@ -407,10 +405,8 @@ const seconds = currentDate.getSeconds();
 
           if (response6.ok) {
             var result6 = await response6.json();
-            console.log("............",result6)
             changenow = typeof result6.estimatedAmount === 'undefined' ? 0 : parseFloat(result6.estimatedAmount)
             changenow = typeof changenow === 'number' && !isNaN(changenow) ? changenow.toFixed(8) : 0;
-            console.log("changenow" + changenow)
 
           } else {
             changenow = 0
@@ -443,7 +439,6 @@ const seconds = currentDate.getSeconds();
             let letsexchange_min=parseFloat(result8.min_amount);
             if (amount_num >= letsexchange_min) {
               letsexchange = typeof result8 === 'undefined' ? 0 : parseFloat(result8.amount);
-              console.log(letsexchange)
               letsexchange = typeof letsexchange === 'number' && !isNaN(letsexchange) ? letsexchange.toFixed(8) : 0;
             } else {
               letsexchange = 0
@@ -496,7 +491,6 @@ const seconds = currentDate.getSeconds();
             changenow_fixed = typeof result10.estimatedAmount === 'undefined' ? 0 : parseFloat(result10.estimatedAmount);
             changenow_fixed = typeof changenow_fixed === 'number' && !isNaN(changenow_fixed) ? changenow_fixed.toFixed(8) : 0;
             changenow_fixed_rateId = result10.rateId
-            console.log("changenow" + changenow)
           } else {
             changenow_fixed = 0
             changenow_fixed_rateId = 0
@@ -561,6 +555,8 @@ const seconds = currentDate.getSeconds();
         try {
           if (response14.ok) {
             var result14 = await response14.json();
+            console.log(result14)
+            // console.log("........",result14)
             changehero_fixed = parseFloat(result14.result !== undefined && result14.result.length > 0 ? result14.result[0].result : 0) * parseFloat(amount);
             changehero_fixed = typeof changehero_fixed === 'number' && !isNaN(changehero_fixed) ? changehero_fixed.toFixed(8) : 0;
             changehero_fixed_rateId = result14.result[0].id
@@ -841,7 +837,6 @@ const seconds = currentDate.getSeconds();
           try {
             const data = await JSON.parse(response.body);
             comp2 = data.result;
-            console.log(data.result)
           } catch (error) {
             changelly_float_price = 0;
           }
@@ -939,7 +934,7 @@ const seconds = currentDate.getSeconds();
       setTimeout(async () => {
 
         const response18 = await fetch(
-          `https://api.changenow.io/v2/exchange/min-amount?fromCurrency=${sell}&toCurrency=${get}`,
+          `https://api.changenow.io/v1/min-amount/${sell}_${get}?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`,
           {
             method: "GET",
             headers: {
@@ -947,6 +942,7 @@ const seconds = currentDate.getSeconds();
             },
           }
         )
+
 
         const result18 = await response18.json()
         let amount_num=parseFloat(amount)
@@ -1041,7 +1037,7 @@ const seconds = currentDate.getSeconds();
         })
 
         const result17 = await response17.json();
-        let changehero_min=parseFloat(result17.result)
+        let changehero_min=parseFloat(result17.result);
         let amount_num=parseFloat(amount)
         if (amount_num >= changehero_min) {
           response14 = await fetch(`https://api.changehero.io/v2/`, {
@@ -1373,6 +1369,7 @@ app.post("/price/float/Changehero", async (req, res) => {
 
   const {sell,get,amount}=req.body
   console.log("Changehero")
+  console.log(req.body)
 
   const param = {
     jsonrpc: "2.0",
@@ -1404,7 +1401,7 @@ app.post("/price/fixed/Changehero", async (req, res) => {
 
   const {sell,get,amount}=req.body
   console.log("Changehero")
-
+  console.log(req.body)
 
   const param = {
     jsonrpc: "2.0",
