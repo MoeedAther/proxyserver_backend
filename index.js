@@ -62,13 +62,10 @@ callApi();
 
 app.post("/multiplefetch", async (req, res) => {
 
-  const currentDate = new Date();
-  const minutes = currentDate.getMinutes();
-const seconds = currentDate.getSeconds();
-
   const { sell, get, amount } = req.body;
+  console.log(req.body)
   const timeout = 1000;
-  const responseCall = 5000;
+  const responseCall = 12000;
 
 
   changelly_float_price = 0
@@ -292,20 +289,52 @@ const seconds = currentDate.getSeconds();
   };
 
   //*************************** Letsexchange Float Params ******************* */
-  const param8 = {
-    from: sell,
-    to: get,
-    amount: amount,
-    float: true
-  };
+  let toncoinsell, toncoinget,param8;
+  if(sell=="toncoin" || get=="toncoin"){
+    toncoinsell=sell=="toncoin"?"TON-ERC20":sell;
+    toncoinget=get=="toncoin"?"TON-ERC20":get;
+
+     param8 = {
+      from: toncoinsell,
+      to: toncoinget,
+      amount: amount,
+      float: true
+    }
+
+
+  }else{
+    param8 = {
+     from: sell,
+     to: get,
+     amount: amount,
+     float: true
+   };
+ }
+
 
   //*************************** Letsexchange Fixed Params ******************* */
-  const param10 = {
-    from: sell,
-    to: get,
-    amount: amount,
-    float: false
-  };
+
+  let param10;
+  if(sell=="toncoin" || get=="toncoin"){
+    toncoinsell=sell=="toncoin"?"TON-ERC20":sell;
+    toncoinget=get=="toncoin"?"TON-ERC20":get;
+
+    param10 = {
+      from: toncoinsell,
+      to: toncoinget,
+      amount: amount,
+      float: false
+    }
+
+
+  }else{
+    param10 = {
+     from: sell,
+     to: get,
+     amount: amount,
+     float: false
+   };
+ }
 
 
   //This conditions checks for empty strings and zero
@@ -391,12 +420,14 @@ const seconds = currentDate.getSeconds();
             var result5 = await response5.json();
             simpleswap = typeof result5 === 'undefined' ? 0 : parseFloat(result5)
             simpleswap = typeof simpleswap === 'number' && !isNaN(simpleswap) ? simpleswap.toFixed(8) : 0;
-
+            console.log("simpleswap",simpleswap)
           } else {
             simpleswap = 0
+            console.log("simpleswap error")
           }
         } catch (error) {
           simpleswap = 0
+          console.log("simpleswap error")
         }
 
 
@@ -545,18 +576,16 @@ const seconds = currentDate.getSeconds();
             simpleswap_fixed = typeof result13 === 'undefined' ? 0 : parseFloat(result13);
             simpleswap_fixed = typeof simpleswap_fixed === 'number' && !isNaN(simpleswap_fixed) ? simpleswap_fixed.toFixed(8) : 0;
           } else {
-            simpleswap = 0
+            simpleswap_fixed = 0
           }
         } catch (error) {
-          simpleswap = 0
+          simpleswap_fixed = 0
         }
 
         // Changehero Fixed
         try {
           if (response14.ok) {
             var result14 = await response14.json();
-            console.log(result14)
-            // console.log("........",result14)
             changehero_fixed = parseFloat(result14.result !== undefined && result14.result.length > 0 ? result14.result[0].result : 0) * parseFloat(amount);
             changehero_fixed = typeof changehero_fixed === 'number' && !isNaN(changehero_fixed) ? changehero_fixed.toFixed(8) : 0;
             changehero_fixed_rateId = result14.result[0].id
@@ -623,7 +652,7 @@ const seconds = currentDate.getSeconds();
         const sortedArr = sortArrayDescending(arr, "value");
 
         console.log("Highest value " + sortedArr[0].value + sortedArr[0].name);
-
+        console.log("ggggg", simpleswap)
         const responseObj = {
           hightprice: sortedArr[0].value.toFixed(8),
           pricearray: sortedArr,
@@ -740,6 +769,30 @@ const seconds = currentDate.getSeconds();
       //.......................................................Api 5 Call (Simpleswap)
       setTimeout(async () => {
 
+        if(sell=="toncoin" || get=="toncoin"){
+          const toncoinsell=sell=="toncoin"?"tonerc20":sell;
+          const toncoinget=get=="toncoin"?"tonerc20":get;
+          const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${toncoinsell}&currency_to=${toncoinget}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        });
+
+        const data = await response.json()
+        let amount_num=parseFloat(amount)
+        let simpleswap_num=parseFloat(data.min)
+        if (amount_num >= simpleswap_num) {
+          response5 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${toncoinsell}&currency_to=${toncoinget}&amount=${amount}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          });
+        }
+
+        }else{
+
         const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}`, {
           method: "GET",
           headers: {
@@ -759,6 +812,7 @@ const seconds = currentDate.getSeconds();
             }
           });
         }
+      }
 
       }, timeout)
 
@@ -820,6 +874,7 @@ const seconds = currentDate.getSeconds();
 
       //.......................................................Api 8 Call (Letsexchange)
       setTimeout(async () => {
+        
         response8 = await fetch(`https://api.letsexchange.io/api/v1/info`, {
           method: "POST",
           headers: {
@@ -828,6 +883,8 @@ const seconds = currentDate.getSeconds();
           },
           body: JSON.stringify(param8),
         })
+        // const result8=await response8.json()
+        // console.log(response8)
       }, timeout)
 
       //.......................................................Api 9 Call (Changelly Fixed Price)
@@ -1001,27 +1058,55 @@ const seconds = currentDate.getSeconds();
 
       //.......................................................Api 13 Call (Simpleswap Fixed)
       setTimeout(async () => {
-        const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          }
-        });
 
-        const data = await response.json()
+        if(sell=="toncoin" || get=="toncoin"){
+          const toncoinsell=sell=="toncoin"?"tonerc20":sell;
+          const toncoinget=get=="toncoin"?"tonerc20":get;
+          const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${toncoinsell}&currency_to=${toncoinget}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          });
+  
+          const data = await response.json()
+  
+          let amount_num=parseFloat(amount)
+          let simpleswap_num=parseFloat(data.min)
+  
+          if(amount_num>=simpleswap_num)
+  {
+          response13 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${toncoinsell}&currency_to=${toncoinget}&amount=${amount}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          })
+        }
+        }else{
+          const response = await fetch(`https://api.simpleswap.io/get_ranges?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          });
+  
+          const data = await response.json()
+  
+          let amount_num=parseFloat(amount)
+          let simpleswap_num=parseFloat(data.min)
+  
+          if(amount_num>=simpleswap_num)
+  {
+          response13 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          })
+        }
+        }
 
-        let amount_num=parseFloat(amount)
-        let simpleswap_num=parseFloat(data.min)
-
-        if(amount_num>=simpleswap_num)
-{
-        response13 = await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=true&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          }
-        })
-      }
       }, timeout)
 
       //.......................................................Api 14 Call (Changehero Fixed)
@@ -1134,7 +1219,7 @@ app.post("/price/float/Changelly", async (req, res) => {
         let price = data.result[0].amountTo;
         return res.json({price:price})
       } catch (error) {
-        console.log()
+        console.log(error)
       }
     })
 
@@ -1253,7 +1338,6 @@ app.post("/price/fixed/Changenow", async (req, res) => {
 app.post("/price/float/Stealthex", async (req, res) => {
 
   const {sell,get,amount}=req.body
-  console.log("Stealthex float:",req.body)
   const response = await fetch(`https://api.stealthex.io/api/v2/estimate/${sell}/${get}?amount=${amount}&api_key=6cbd846e-a085-4505-afeb-8fca0d650c58&fixed=false`, {
     method: "GET",
     headers: {
@@ -1262,7 +1346,6 @@ app.post("/price/float/Stealthex", async (req, res) => {
   })
 
   const data=await response.json()
-  console.log("Stealthex float:",data.estimated_amount)
   const price=data.estimated_amount
   res.json({price:price})
 
@@ -1332,7 +1415,6 @@ app.post("/price/fixed/Exolix", async (req, res) => {
 app.post("/price/float/Simpleswap", async (req, res) => {
 
   const {sell,get,amount}=req.body
-console.log(req.body)
   const response =  await fetch(`http://api.simpleswap.io/get_estimated?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759&fixed=false&currency_from=${sell}&currency_to=${get}&amount=${amount}`, {
     method: "GET",
     headers: {
@@ -1368,8 +1450,6 @@ app.post("/price/fixed/Simpleswap", async (req, res) => {
 app.post("/price/float/Changehero", async (req, res) => {
 
   const {sell,get,amount}=req.body
-  console.log("Changehero")
-  console.log(req.body)
 
   const param = {
     jsonrpc: "2.0",
@@ -1400,8 +1480,6 @@ app.post("/price/float/Changehero", async (req, res) => {
 app.post("/price/fixed/Changehero", async (req, res) => {
 
   const {sell,get,amount}=req.body
-  console.log("Changehero")
-  console.log(req.body)
 
   const param = {
     jsonrpc: "2.0",
@@ -1539,7 +1617,6 @@ app.post("/price/fixed/Letsexchange", async (req, res) => {
 //**************************************** Changelly Float Transaction ************************* */
 app.post("/createTransaction/changelly/float", async (req, res) => {
   const { sell, get, amount, sender_address, refund_address, extraid } = req.body;
-  console.log(req.body)
 
   const privateKey = crypto.createPrivateKey({
     key: privateKeyString,
@@ -1566,7 +1643,6 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
       refundAddress: refund_address
     }
   };
-  console.log(privateKeyString)
   const signature = crypto.sign(
     "sha256",
     Buffer.from(JSON.stringify(message)),
@@ -1593,7 +1669,6 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
 
   request(param5, async function (error, response) {
     const data = await JSON.parse(response.body);
-    console.log(data)
     res.json(data)
   })
 
@@ -1602,7 +1677,6 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
 //**************************************** Changelly Fixed Transaction ************************* */
 app.post("/createTransaction/changelly/fixed", async (req, res) => {
   const { sell, get, amount, sender_address, refund_address, extraid } = req.body;
-  console.log(req.body)
 
   const privateKey = crypto.createPrivateKey({
     key: privateKeyString,
@@ -1629,7 +1703,6 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
       refundAddress: refund_address
     }
   };
-  console.log(privateKeyString)
   const signature = crypto.sign(
     "sha256",
     Buffer.from(JSON.stringify(message)),
@@ -1656,7 +1729,6 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
 
   request(param5, async function (error, response) {
     const data = await JSON.parse(response.body);
-    console.log(data)
     res.json(data)
   })
 
@@ -1666,7 +1738,7 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
 app.post("/createTransaction/changenow/float", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, extraid ,refextraid} = req.body
-  console.log("changenow")
+
   console.log(req.body)
 
   const url = "https://api.changenow.io/v1/transactions/3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c";
@@ -1693,6 +1765,9 @@ app.post("/createTransaction/changenow/float", async (req, res) => {
 
   const response = await fetch(url, options)
   const data = await response.json()
+
+  console.log(data)
+
   res.json(data)
 
 });
@@ -1700,9 +1775,9 @@ app.post("/createTransaction/changenow/float", async (req, res) => {
 //**************************************** Changenow Fixed Transactions ************************* */
 app.post("/createTransaction/changenow/fixed", async (req, res) => {
 
-  console.log("changenow fixed")
-
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid} = req.body
+
+  console.log(req.body)
 
   const url = "https://api.changenow.io/v1/transactions/fixed-rate/3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c";
 
@@ -1730,6 +1805,9 @@ app.post("/createTransaction/changenow/fixed", async (req, res) => {
 
   const response = await fetch(url, options)
   const data = await response.json()
+
+  console.log(data)
+
   res.json(data)
 
 });
@@ -1737,9 +1815,9 @@ app.post("/createTransaction/changenow/fixed", async (req, res) => {
 //**************************************** StealthEX Float Transactions ************************* */
 app.post("/createTransaction/StealthEX/float", async (req, res) => {
 
-  console.log("StealthEX")
-
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid} = req.body
+
+  console.log(req.body)
 
   const url = "https://api.stealthex.io/api/v2/exchange?api_key=fc69c031-976a-4e7f-b3db-e18f758bed5d";
 
@@ -1766,6 +1844,9 @@ app.post("/createTransaction/StealthEX/float", async (req, res) => {
 
   const response = await fetch(url, options)
   const data = await response.json()
+
+  console.log(data)
+
   res.json(data)
 
 });
@@ -1773,7 +1854,6 @@ app.post("/createTransaction/StealthEX/float", async (req, res) => {
 //**************************************** StealthEX Fixed Transactions ************************* */
 app.post("/createTransaction/StealthEX/fixed", async (req, res) => {
 
-  console.log("StealthEX fixed")
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
 
   const url = "https://api.stealthex.io/api/v2/exchange?api_key=fc69c031-976a-4e7f-b3db-e18f758bed5d";
@@ -1810,10 +1890,8 @@ app.post("/createTransaction/StealthEX/fixed", async (req, res) => {
 //**************************************** Exolix Float Transactions ************************* */
 app.post("/createTransaction/Exolix/float", async (req, res) => {
 
-  console.log("Exolix")
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId } = req.body
-  console.log(req.body)
 
   const url = "https://exolix.com/api/v2/transactions";
 
@@ -1839,7 +1917,6 @@ app.post("/createTransaction/Exolix/float", async (req, res) => {
 
   const response = await fetch(url, options)
   const data = await response.json()
-  console.log(data)
   res.json(data)
 
 });
@@ -1847,10 +1924,7 @@ app.post("/createTransaction/Exolix/float", async (req, res) => {
 //**************************************** Exolix Fixed Transactions ************************* */
 app.post("/createTransaction/Exolix/fixed", async (req, res) => {
 
-  console.log("Exolix fixed")
-
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId } = req.body
-  console.log(req.body)
 
   const url = "https://exolix.com/api/v2/transactions";
 
@@ -1875,9 +1949,7 @@ app.post("/createTransaction/Exolix/fixed", async (req, res) => {
   }
 
   const response = await fetch(url, options)
-  console.log(response)
   const data = await response.json()
-  console.log(data)
   res.json(data)
 
 });
@@ -1885,9 +1957,8 @@ app.post("/createTransaction/Exolix/fixed", async (req, res) => {
 //**************************************** Simpleswap Float Transactions ************************* */
 app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 
-  console.log("Simpleswap")
-
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
+
   console.log(req.body)
 
   const url = "https://api.simpleswap.io/create_exchange?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759";
@@ -1918,6 +1989,8 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 
   const data = await response.json()
 
+  console.log(data)
+
   res.json(data)
 
 });
@@ -1926,7 +1999,6 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
-  console.log(req.body)
 
   const url = "https://api.simpleswap.io/create_exchange?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759";
 
@@ -1964,6 +2036,7 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
 app.post("/createTransaction/Changehero/float", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
+
   console.log(req.body)
 
   const url = "https://api.changehero.io/v2/";
@@ -2008,10 +2081,6 @@ app.post("/createTransaction/Changehero/fixed", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
 
-  console.log("Changehero Fixed")
-
-  console.log(req.body)
-
   const url = "https://api.changehero.io/v2/";
 
   const params = {
@@ -2045,8 +2114,6 @@ app.post("/createTransaction/Changehero/fixed", async (req, res) => {
 
   const data = await response.json()
 
-  console.log(data)
-
   res.json(data)
 
 });
@@ -2055,7 +2122,9 @@ app.post("/createTransaction/Changehero/fixed", async (req, res) => {
 app.post("/createTransaction/Godex/float", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
+
   console.log(req.body)
+
   const url = "https://api.godex.io/api/v1/transaction?affiliate_id=sZnGAGyVu";
 
   const params = {
@@ -2064,9 +2133,9 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
     coin_to: get.toUpperCase(),
     deposit_amount: amount,
     withdrawal: recieving_Address,
-    withdrawal_extra_id: refextraid!=undefined?refextraid:"",
+    withdrawal_extra_id: extraid!=undefined?extraid:"",
     return: refund_Address,
-    return_extra_id: refextraid
+    return_extra_id:refextraid!=undefined?refextraid:"" 
 
   }
 
@@ -2093,8 +2162,8 @@ app.post("/createTransaction/Godex/float", async (req, res) => {
 
 //**************************************** Letsexchange Float Transactions ************************* */
 app.post("/createTransaction/Letsexchange/float", async (req, res) => {
-  console.log("letsexchange")
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid,  refextraid} = req.body
+
   console.log(req.body)
 
   const url = "https://api.letsexchange.io/api/v1/transaction";
@@ -2135,10 +2204,8 @@ app.post("/createTransaction/Letsexchange/float", async (req, res) => {
 
 //**************************************** Letsexchange Fixed Transactions ************************* */
 app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
-  console.log("letsexchange_fixed")
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
-  console.log(req.body)
 
   const url = "https://api.letsexchange.io/api/v1/transaction";
 
@@ -2169,8 +2236,6 @@ app.post("/createTransaction/Letsexchange/fixed", async (req, res) => {
 
 
   const data = await response.json()
-
-  console.log(data)
 
   res.json(data)
 
@@ -2207,7 +2272,6 @@ app.post("/createTransaction/Fixedfloat/float", async (req, res) => {
 app.post("/createTransaction/Fixedfloat/fixed", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid } = req.body
-  console.log(req.body)
   const s=sell.toUpperCase();
   const g=get.toUpperCase();
 
@@ -2272,8 +2336,6 @@ app.post("/transactionStatus/StealthEX", async (req, res) => {
 
   const data = await response.json()
 
-  console.log(data)
-
   res.json(data)
 
 })
@@ -2285,7 +2347,6 @@ app.post("/transactionStatus/Exolix", async (req, res) => {
   const { id } = req.body
 
   const url = `https://exolix.com/api/v2/transactions/${id}`;
-  console.log(url)
 
   const options = {
     method: "GET",
@@ -2297,8 +2358,6 @@ app.post("/transactionStatus/Exolix", async (req, res) => {
   const response = await fetch(url, options)
 
   const data = await response.json()
-
-  console.log(data)
 
   res.json(data)
 
@@ -2324,8 +2383,6 @@ app.post("/transactionStatus/Simpleswap", async (req, res) => {
 
   const data = await response.json()
 
-  console.log(data)
-
   res.json(data)
 
 })
@@ -2334,9 +2391,7 @@ app.post("/transactionStatus/Simpleswap", async (req, res) => {
 app.post("/transactionStatus/Changehero", async (req, res) => {
 
   const { id } = req.body
-  console.log(id)
   const url = `https://api.changehero.io/v2/`;
-  console.log(url)
 
   const params = {
 
@@ -2360,8 +2415,6 @@ app.post("/transactionStatus/Changehero", async (req, res) => {
   const response = await fetch(url, options)
   const data = await response.json()
 
-  console.log(data)
-
   res.json(data)
 
 })
@@ -2372,7 +2425,6 @@ app.post("/transactionStatus/Godex", async (req, res) => {
   const { id } = req.body
 
   const url = `http://api.godex.io/api/v1/transaction/${id}`;
-  console.log(url)
 
   const options = {
     method: "GET",
@@ -2387,8 +2439,6 @@ app.post("/transactionStatus/Godex", async (req, res) => {
 
   const data = await response.json()
 
-  console.log(data)
-
   res.json(data)
 
 })
@@ -2399,8 +2449,6 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
   const { id } = req.body
 
   const url = `https://api.letsexchange.io/api/v1/transaction/${id}/status`;
-
-  console.log(url)
 
   const options = {
     method: "GET",
@@ -2416,8 +2464,6 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
 
   const data = await response.text();
 
-  console.log(data)
-
   res.json({ status: data })
 
 })
@@ -2425,7 +2471,6 @@ app.post("/transactionStatus/Letsexchange", async (req, res) => {
 //**************************************** Fixed Float  **************************** */
 app.post("/pricecheck", async (req, res) => {
 
-  console.log(req.body)
   const { sel, get, amount } = req.body;
   if (amount != "0" && amount != "0." && amount != 0 && amount != "") {
     // const ff = new FixedFloat('g5TrAhpiFKxCSDlYkcwjLrRdLfPutWghO5Vqe7sD', '0heeFYtaCGFRma6ll7zkW4YflIxwoAFNAohS9aAg');
@@ -2441,7 +2486,6 @@ app.post("/pricecheck", async (req, res) => {
     }
     const response=await fetch(url,options);
     const data=await response.json();
-    console.log(data)
     const minamount =data.minAmount;
     if(minamount<=amount){
       const url2=`https://api.changenow.io/v1/exchange-amount/${amount}/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
@@ -2466,7 +2510,6 @@ app.post("/pricecheck", async (req, res) => {
       const response3=await fetch(url3,options3);
       const data3=await response3.json();
 
-      console.log(data2)
       return res.json({to:{amount:data2.estimatedAmount, from:{min:minamount}, onesel:data3.estimatedAmount}})
     }else{
       const url3=`https://api.changenow.io/v1/exchange-amount/1/${sel}_${get}/?api_key=3016eb278f481714c943980dec2bfc595f8a2160e8eabd0228dc02cc627a184c`;
@@ -2552,7 +2595,6 @@ app.get("/currencies", async (req, res) => {
 app.post("/validate", async (req, res) => {
 
   const { curr, address, extraid } = req.body;
-  console.log(curr, address,extraid)
   const url=`https://api.changenow.io/v2/validate/address?currency=${curr}&address=${(extraid!=""?address+"&extraId="+extraid:address)}`;
 
     const options={
