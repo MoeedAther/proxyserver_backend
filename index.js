@@ -620,13 +620,14 @@ app.post("/multiplefetch", async (req, res) => {
         }
 
 
+
         //.........Creating arry of objects and finding heighest value...........//
 
         let arr = [
           { name: "changenow", value: parseFloat(changenow) },
           { name: "exolix", value: parseFloat(exolix) },
           { name: "godex", value: parseFloat(godex) },
-          { name: "changehero", value: parseFloat(changehero) },
+          { name: "changehero", value: parseFloat(parseFloat(changehero).toFixed(8)) },
           { name: "changelly", value: parseFloat(changelly) },
           { name: "simpleswap", value: parseFloat(simpleswap) },
           { name: "stealthio", value: parseFloat(stealthio) },
