@@ -2011,7 +2011,6 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
     amount: amount,
     address_to: recieving_Address,
     extra_id_to: extraid,
-    extra_id:extraid,
     user_refund_address: refund_Address,
     user_refund_extra_id: refextraid
   }
