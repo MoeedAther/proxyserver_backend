@@ -65,7 +65,7 @@ app.post("/multiplefetch", async (req, res) => {
   const { sell, get, amount } = req.body;
   console.log(req.body)
   const timeout = 1000;
-  const responseCall = 12000;
+  const responseCall = 5000;
 
 
   changelly_float_price = 0
