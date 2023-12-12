@@ -65,7 +65,7 @@ app.post("/multiplefetch", async (req, res) => {
   const { sell, get, amount } = req.body;
   console.log(req.body)
   const timeout = 1000;
-  const responseCall = 5000;
+  const responseCall = 12000;
 
 
   changelly_float_price = 0
@@ -2000,7 +2000,7 @@ app.post("/createTransaction/Simpleswap/float", async (req, res) => {
 app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
 
   const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid, refextraid } = req.body
-
+  
   const url = "https://api.simpleswap.io/create_exchange?api_key=ae57f22d-7a23-4dbe-9881-624b2e147759";
 
   const params = {
@@ -2010,7 +2010,7 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
     currency_to: get,
     amount: amount,
     address_to: recieving_Address,
-    extra_id_to: "",
+    extra_id_to: extraid,
     extra_id:extraid,
     user_refund_address: refund_Address,
     user_refund_extra_id: refextraid
@@ -2028,7 +2028,6 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
   const response = await fetch(url, options)
 
   const data = await response.json()
-
   res.json(data)
 
 });
