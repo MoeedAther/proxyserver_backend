@@ -364,9 +364,8 @@ app.post("/multiplefetch", async (req, res) => {
             let amount_num=parseFloat(amount)
             let exolix_min=parseFloat(result2.minAmount)
             if (amount_num >= exolix_min) {
-              // exolix = typeof result2.toAmount === 'undefined'? 0: parseFloat(result2.toAmount)
-              // exolix = typeof exolix === 'number' && !isNaN(exolix)?exolix.toFixed(8):0;
-              exolix = 0
+              exolix = typeof result2.toAmount === 'undefined'? 0: parseFloat(result2.toAmount)
+              exolix = typeof exolix === 'number' && !isNaN(exolix)?exolix.toFixed(8):0;
             } else {
               exolix = 0
             }
@@ -555,9 +554,8 @@ app.post("/multiplefetch", async (req, res) => {
             let exolix_min=parseFloat(result12.minAmount)
             //This condition checks if amount send is less then minimum amount to exchange if amount less then minimum it sets 0
             if (amount_num >= exolix_min) {
-              //  exolix_fixed = typeof result12.toAmount === 'undefined'? 0: parseFloat(result12.toAmount);
-              //  exolix_fixed = typeof exolix_fixed === 'number' && !isNaN(exolix_fixed)?exolix_fixed.toFixed(8):0;
-              exolix_fixed = 0
+               exolix_fixed = typeof result12.toAmount === 'undefined'? 0: parseFloat(result12.toAmount);
+               exolix_fixed = typeof exolix_fixed === 'number' && !isNaN(exolix_fixed)?exolix_fixed.toFixed(8):0;
             } else {
               exolix_fixed = 0
             }
@@ -1892,7 +1890,7 @@ app.post("/createTransaction/StealthEX/fixed", async (req, res) => {
 app.post("/createTransaction/Exolix/float", async (req, res) => {
 
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid } = req.body
 
   const url = "https://exolix.com/api/v2/transactions";
 
@@ -1902,9 +1900,10 @@ app.post("/createTransaction/Exolix/float", async (req, res) => {
     coinTo: get.toUpperCase(),
     amount: amount,
     withdrawalAddress: recieving_Address,
+    withdrawalExtraId: extraid,
+    rateType: "float",
     refundAddress: refund_Address,
-    rateType: "float"
-
+    refundExtraId: refextraid
   }
 
   const options = {
@@ -1925,7 +1924,7 @@ app.post("/createTransaction/Exolix/float", async (req, res) => {
 //**************************************** Exolix Fixed Transactions ************************* */
 app.post("/createTransaction/Exolix/fixed", async (req, res) => {
 
-  const { sell, get, amount, recieving_Address, refund_Address, email, rateId } = req.body
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId, extraid , refextraid  } = req.body
 
   const url = "https://exolix.com/api/v2/transactions";
 
@@ -1935,8 +1934,10 @@ app.post("/createTransaction/Exolix/fixed", async (req, res) => {
     coinTo: get.toUpperCase(),
     amount: amount,
     withdrawalAddress: recieving_Address,
+    withdrawalExtraId: extraid,
+    rateType: "fixed",
     refundAddress: refund_Address,
-    rateType: "fixed"
+    refundExtraId: refextraid
 
   }
 
@@ -2011,6 +2012,7 @@ app.post("/createTransaction/Simpleswap/fixed", async (req, res) => {
     amount: amount,
     address_to: recieving_Address,
     extra_id_to: extraid,
+    extra_id:extraid,
     user_refund_address: refund_Address,
     user_refund_extra_id: refextraid
   }
