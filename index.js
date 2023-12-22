@@ -690,20 +690,23 @@ app.post("/multiplefetch", async (req, res) => {
           }
         })
 
-        if (amount > comp1) {
+        
           request(param1, async function (error, response) {
             try {
-              // const data = await JSON.parse(response.body);
-              // changelly_float_price = data.result[0].amountTo;
-              changelly_float_price = 0;
+              const data = await JSON.parse(response.body);
+              let amount_num=parseFloat(amount)
+              let amount_from=parseFloat(data.result[0].minFrom)
+              if(amount_num>=amount_from){
+                changelly_float_price = data.result[0].amountTo;
+              }else{
+                changelly_float_price = 0;
+              }
             } catch (error) {
               changelly_float_price = 0;
             }
 
           })
-        } else {
-          changelly_float_price = 0;
-        }
+        
       }, timeout)
 
       //.......................................................Api 2 Call (Exolix)
@@ -889,35 +892,26 @@ app.post("/multiplefetch", async (req, res) => {
       //.......................................................Api 9 Call (Changelly Fixed Price)
       setTimeout(async () => {
 
-        request(param11, async function (error, response) {
-          try {
-            const data = await JSON.parse(response.body);
-            comp2 = data.result;
-          } catch (error) {
-            changelly_float_price = 0;
-          }
-        })
 
-        let amount_num=parseFloat(amount)
-        let changelly_min=parseFloat(comp2)
-
-        if (amount_num > changelly_min) {
           response9 = request(param9, async function (error, response) {
             try {
               const data = await JSON.parse(response.body);
-              // changelly_fixed_price = data.result[0].amountTo;
-              // changelly_fixed_rateId= data.result[0].id;
-              changelly_fixed_price = 0;
-              changelly_fixed_rateId = 0;
+              let amount_num=parseFloat(amount)
+              let amount_from=parseFloat(data.result[0].minFrom)
+              if(amount_num>=amount_from){
+                changelly_fixed_price = data.result[0].amountTo;
+                changelly_fixed_rateId= data.result[0].id;
+              }else{
+                changelly_float_price = 0;
+              }
+
             } catch (error) {
               changelly_fixed_price = 0;
               changelly_fixed_rateId = 0;
             }
           })
 
-        } else {
-          changelly_float_price = 0;
-        }
+
 
       }, timeout)
 
@@ -1615,8 +1609,8 @@ app.post("/price/fixed/Letsexchange", async (req, res) => {
 
 //**************************************** Changelly Float Transaction ************************* */
 app.post("/createTransaction/changelly/float", async (req, res) => {
-  const { sell, get, amount, sender_address, refund_address, extraid } = req.body;
-
+  const {sell, get, amount, recieving_Address, refund_Address, email, rateId ,extraid, refextraid} = req.body;
+console.log(req.body)
   const privateKey = crypto.createPrivateKey({
     key: privateKeyString,
     format: "der",
@@ -1636,12 +1630,24 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
     params: {
       from: sell,
       to: get,
-      address: sender_address,
+      address: recieving_Address,
       extraId: extraid,
-      amount: amount,
-      refundAddress: refund_address
+      amountFrom: amount,
+      refundAddress: refund_Address,
+      refundExtraId: refextraid
     }
   };
+
+  if (refextraid === '') {
+    // Remove refundExtraId property from params
+    delete message.params.refundExtraId;
+  }
+
+  if (extraid === '') {
+    // Remove refundExtraId property from params
+    delete message.params.extraId;
+  }
+
   const signature = crypto.sign(
     "sha256",
     Buffer.from(JSON.stringify(message)),
@@ -1652,7 +1658,7 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
     }
   );
 
-  const param5 = {
+  const paramx = {
     method: "POST",
     url: "https://api.changelly.com/v2",
     headers: {
@@ -1666,7 +1672,7 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
     body: JSON.stringify(message),
   };
 
-  request(param5, async function (error, response) {
+  request(paramx, async function (error, response) {
     const data = await JSON.parse(response.body);
     res.json(data)
   })
@@ -1675,8 +1681,8 @@ app.post("/createTransaction/changelly/float", async (req, res) => {
 
 //**************************************** Changelly Fixed Transaction ************************* */
 app.post("/createTransaction/changelly/fixed", async (req, res) => {
-  const { sell, get, amount, sender_address, refund_address, extraid } = req.body;
-
+  const { sell, get, amount, recieving_Address, refund_Address, email, rateId ,extraid, refextraid } = req.body;
+console.log(req.body)
   const privateKey = crypto.createPrivateKey({
     key: privateKeyString,
     format: "der",
@@ -1692,16 +1698,29 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
   const message = {
     jsonrpc: "2.0",
     id: "test",
-    method: "createTransaction",
+    method: "createFixTransaction",
     params: {
       from: sell,
       to: get,
-      address: sender_address,
+      address: recieving_Address,
       extraId: extraid,
-      amount: amount,
-      refundAddress: refund_address
+      amountFrom: amount,
+      rateId: rateId,
+      refundAddress: refund_Address,
+      refundExtraId: refextraid
     }
   };
+
+  if (refextraid === '') {
+    // Remove refundExtraId property from params
+    delete message.params.refundExtraId;
+  }
+
+  if (extraid === '') {
+    // Remove refundExtraId property from params
+    delete message.params.extraId;
+  }
+
   const signature = crypto.sign(
     "sha256",
     Buffer.from(JSON.stringify(message)),
@@ -1712,7 +1731,7 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
     }
   );
 
-  const param5 = {
+  const paramy = {
     method: "POST",
     url: "https://api.changelly.com/v2",
     headers: {
@@ -1726,7 +1745,7 @@ app.post("/createTransaction/changelly/fixed", async (req, res) => {
     body: JSON.stringify(message),
   };
 
-  request(param5, async function (error, response) {
+  request(paramy, async function (error, response) {
     const data = await JSON.parse(response.body);
     res.json(data)
   })
@@ -2292,6 +2311,63 @@ app.post("/createTransaction/Fixedfloat/fixed", async (req, res) => {
 })
 
 //***************************************** Transaction Status ********************************** */
+
+//**************************************** Changelly Transaction Status ************************* */
+app.post("/transactionStatus/Changelly", async (req, res) => {
+
+  const { id } = req.body
+
+  const privateKey = crypto.createPrivateKey({
+    key: privateKeyString,
+    format: "der",
+    type: "pkcs8",
+    encoding: "hex",
+  });
+
+  const publicKey = crypto.createPublicKey(privateKey).export({
+    type: "pkcs1",
+    format: "der",
+  });
+
+  const message = {
+    jsonrpc: "2.0",
+    id: "test",
+    method: "getStatus",
+    params: {
+    id: id
+    }
+  };
+
+  const signature = crypto.sign(
+    "sha256",
+    Buffer.from(JSON.stringify(message)),
+    {
+      key: privateKey,
+      type: "pkcs8",
+      format: "der",
+    }
+  );
+
+  const paramz = {
+    method: "POST",
+    url: "https://api.changelly.com/v2",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Api-Key": crypto
+        .createHash("sha256")
+        .update(publicKey)
+        .digest("base64"),
+      "X-Api-Signature": signature.toString("base64"),
+    },
+    body: JSON.stringify(message),
+  };
+
+  request(paramz, async function (error, response) {
+    const data = await JSON.parse(response.body);
+    res.json(data)
+  })
+
+});
 
 //**************************************** Changenow Transaction Status **************************** */
 app.post("/transactionStatus/Changenow", async (req, res) => {
